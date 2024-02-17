@@ -51,7 +51,8 @@ VALUES
   ('10', '104', '1', '2, 6', '1, 4', '2020-01-11 18:34:49')
 ```
 
---Runner Orders
+create table Runner Orders and input data to the table
+```
 CREATE TABLE runner_orders (
   "order_id" INTEGER,
   "runner_id" INTEGER,
@@ -74,9 +75,11 @@ VALUES
   ('8', '2', '2020-01-10 00:15:02', '23.4 km', '15 minute', 'null'),
   ('9', '2', 'null', 'null', 'null', 'Customer Cancellation'),
   ('10', '1', '2020-01-11 18:50:20', '10km', '10minutes', 'null')
+```
 
-
---Pizza Names
+create table Pizza Names and input data to the table
+```
+Pizza Names
 CREATE TABLE pizza_names (
   "pizza_id" INTEGER,
   "pizza_name" TEXT
@@ -87,8 +90,10 @@ INSERT INTO pizza_names
 VALUES
   (1, 'Meatlovers'),
   (2, 'Vegetarian')
+```
 
-
+create table Pizza Recipes and input data to the table
+```
 --Pizza Recipes
 CREATE TABLE pizza_recipes (
   "pizza_id" INTEGER,
@@ -100,9 +105,10 @@ INSERT INTO pizza_recipes
 VALUES
   (1, '1, 2, 3, 4, 5, 6, 8, 10'),
   (2, '4, 6, 7, 9, 11, 12')
+```
 
-
---Pizza Toppings
+create table Pizza Toppings and input data to the table
+```
 CREATE TABLE pizza_toppings (
   "topping_id" INTEGER,
   "topping_name" TEXT
@@ -123,6 +129,8 @@ VALUES
   (10, 'Salami'),
   (11, 'Tomatoes'),
   (12, 'Tomato Sauce')
+```
+
 
 	--cleaning dataset customer_order
 	DROP TABLE IF EXISTS #temp_customer_order
