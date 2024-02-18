@@ -131,60 +131,63 @@ VALUES
   (12, 'Tomato Sauce')
 ```
 
+Cleaning dataset customer_order
+```
+  DROP TABLE IF EXISTS #temp_customer_order
+  CREATE TABLE #temp_customer_order (
+  "order_id" INTEGER,
+  "customer_id" INTEGER,
+  "pizza_id" INTEGER,
+  "exclusions" VARCHAR(4),
+  "extras" VARCHAR(4),
+  "order_time" DATETIME
+  )
 
-	--cleaning dataset customer_order
-	DROP TABLE IF EXISTS #temp_customer_order
-	CREATE TABLE #temp_customer_order (
-	"order_id" INTEGER,
-	"customer_id" INTEGER,
-	"pizza_id" INTEGER,
-	"exclusions" VARCHAR(4),
-	"extras" VARCHAR(4),
-	"order_time" DATETIME
-	)
+  INSERT INTO #temp_customer_order
+  SELECT * FROM customer_orders
 
-	INSERT INTO #temp_customer_order
-	SELECT * FROM customer_orders
+  UPDATE #temp_customer_order
+  SET exclusions = NULL
+  WHERE exclusions = 'null' OR exclusions = ''
 
-	UPDATE #temp_customer_order
-	SET exclusions = NULL
-	WHERE exclusions = 'null' OR exclusions = ''
+  UPDATE #temp_customer_order
+  SET extras = NULL
+  WHERE extras = '' OR extras = 'null'
+```
 
-	UPDATE #temp_customer_order
-	SET extras = NULL
-	WHERE extras = '' OR extras = 'null'
+Cleaning dataset runner_order
+```
+  DROP TABLE IF EXISTS #temp_runner_order
+  CREATE TABLE #temp_runner_order (
+  "order_id" INTEGER,
+  "runner_id" INTEGER,
+  "pickup_time" VARCHAR(19),
+  "distance" VARCHAR(7),
+  "duration" VARCHAR(10),
+  "cancellation" VARCHAR(23)
+  )
 
-	--cleaning dataset runner_order
-	DROP TABLE IF EXISTS #temp_runner_order
-	CREATE TABLE #temp_runner_order (
-	"order_id" INTEGER,
-	"runner_id" INTEGER,
-	"pickup_time" VARCHAR(19),
-	"distance" VARCHAR(7),
-	"duration" VARCHAR(10),
-	"cancellation" VARCHAR(23)
-	)
+  INSERT INTO #temp_runner_order
+  SELECT * FROM runner_orders
 
-	INSERT INTO #temp_runner_order
-	SELECT * FROM runner_orders
+  UPDATE #temp_runner_order
+  SET pickup_time = NULL
+  WHERE pickup_time = 'null'
 
-	UPDATE #temp_runner_order
-	SET pickup_time = NULL
-	WHERE pickup_time = 'null'
+  UPDATE #temp_runner_order
+  SET distance = NULL
+  WHERE distance = 'null'
 
-	UPDATE #temp_runner_order
-	SET distance = NULL
-	WHERE distance = 'null'
+  UPDATE #temp_runner_order
+  SET duration = NULL
+  WHERE duration = 'null'
 
-	UPDATE #temp_runner_order
-	SET duration = NULL
-	WHERE duration = 'null'
+  UPDATE #temp_runner_order
+  SET cancellation = NULL
+  WHERE cancellation = '' OR cancellation = 'null'
+```
 
-	UPDATE #temp_runner_order
-	SET cancellation = NULL
-	WHERE cancellation = '' OR cancellation = 'null'
-
-	SELECT * FROM #temp_runner_order
+QUESTIONS:
 
 --How many pizzas were ordered?
 	SELECT COUNT(order_id) AS OrderedNumber
