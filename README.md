@@ -244,8 +244,9 @@ A. Pizza (Metrics)
   JOIN #temp_runner_order ro
     ON co.order_id = ro.order_id
   WHERE duration IS NOT NULL
-
-  removing counters from distance & duration column
+```
+removing counters from distance & duration column
+```
   UPDATE #temp_orderXrunner
   SET distance = REPLACE(distance, 'km', '')
   WHERE distance LIKE '%km'
@@ -256,9 +257,9 @@ A. Pizza (Metrics)
   UPDATE #temp_orderXrunner
   SET duration = LEFT(duration, 2)
   WHERE duration LIKE '%min%'
-
-  changing datatype for column distance & duration in #temp_orderXrunner
-
+```
+changing datatype for column distance & duration in #temp_orderXrunner
+```
   ALTER TABLE #temp_orderXrunner
   ALTER COLUMN distance NUMERIC
 
@@ -271,83 +272,105 @@ A. Pizza (Metrics)
   ORDER BY no_of_pizza DESC
 ```
 
---For each customer, how many delivered pizzas had at least 1 change and how many had no changes?
-	SELECT customer_id,  
-		COUNT(
-		CASE
-		WHEN exclusions IS NOT NULL OR extras IS NOT NULL THEN 1
-		END) AS changed,
-		COUNT(
-		CASE
-		WHEN exclusions IS NULL AND extras IS NULL THEN 1
-		END) AS no_changed
-	FROM #temp_orderXrunner
-	GROUP BY customer_id
+7. For each customer, how many delivered pizzas had at least 1 change and how many had no changes?
+```
+  SELECT customer_id,  
+    COUNT(
+    CASE
+      WHEN exclusions IS NOT NULL OR extras IS NOT NULL THEN 1
+    END) AS changed,
+    COUNT(
+    CASE
+      WHEN exclusions IS NULL AND extras IS NULL THEN 1
+    END) AS no_changed
+  FROM #temp_orderXrunner
+  GROUP BY customer_id
+```
 
---How many pizzas were delivered that had both exclusions and extras?
-	SELECT COUNT(customer_id) AS [pizza with exclusions & extras]
-	FROM #temp_orderXrunner	
-	WHERE exclusions IS NOT NULL AND extras IS NOT NULL
+8. How many pizzas were delivered that had both exclusions and extras?
+```
+  SELECT COUNT(customer_id) AS [pizza with exclusions & extras]
+  FROM #temp_orderXrunner	
+  WHERE exclusions IS NOT NULL AND extras IS NOT NULL
+```
 
---What was the total volume of pizzas ORDERED for each hour of the day?
-	SELECT DATEPART(hour, order_time) AS [hour], COUNT(order_id) AS no_of_pizza
-	FROM #temp_customer_order
-	GROUP BY DATEPART(hour, order_time)
+9. What was the total volume of pizzas ORDERED for each hour of the day?
+```
+  SELECT DATEPART(hour, order_time) AS [hour], COUNT(order_id) AS no_of_pizza
+  FROM #temp_customer_order
+  GROUP BY DATEPART(hour, order_time)
+```
 
---What was the volume of orders for each day of the week?
-	SELECT DATENAME(weekday, order_time) AS [day], COUNT(order_id) AS no_of_pizza
-	FROM #temp_customer_order
-	GROUP BY DATENAME(weekday, order_time)
+10. What was the volume of orders for each day of the week?
+```
+  SELECT DATENAME(weekday, order_time) AS [day], COUNT(order_id) AS no_of_pizza
+  FROM #temp_customer_order
+  GROUP BY DATENAME(weekday, order_time)
+```
 
-	--DATEPART(interval, date) returns a specified part of a date as an integer value
-	--DATENAME(interval, date) returns a specified part of a date as a string value
+  --DATEPART(interval, date) returns a specified part of a date as an integer value
+  --DATENAME(interval, date) returns a specified part of a date as a string value
 
---How many runners signed up for each 1 week period? (i.e. week starts 2021-01-01)
-	SELECT DATEPART(week, registration_date) AS [week], COUNT(runner_id) AS #runners_registered
-	FROM runners
-	GROUP BY DATEPART(week, registration_date)
+B. Pizza (Runner and Customer Experience)
+1. How many runners signed up for each 1 week period? (i.e. week starts 2021-01-01)
+```
+  SELECT DATEPART(week, registration_date) AS [week], COUNT(runner_id) AS #runners_registered
+  FROM runners
+  GROUP BY DATEPART(week, registration_date)
+```
 
---What was the average time in minutes it took for each runner to arrive at the Pizza Runner HQ to pickup the order?
-	SELECT runner_id, AVG(DATEDIFF(minute, order_time, pickup_time)) AS [AVG_time_to_pickup_order]
-	FROM #temp_orderXrunner
-	GROUP BY runner_id
+2. What was the average time in minutes it took for each runner to arrive at the Pizza Runner HQ to pickup the order?
+```
+  SELECT runner_id, AVG(DATEDIFF(minute, order_time, pickup_time)) AS [AVG_time_to_pickup_order]
+  FROM #temp_orderXrunner
+  GROUP BY runner_id
+```
 
---Is there any relationship between the number of pizzas and how long the order takes to prepare?
-	SELECT order_id, COUNT(pizza_id) AS no_of_pizza, AVG(DATEDIFF(minute, order_time, pickup_time)) AS [AVG_time_to_pickup_order]
-	FROM #temp_orderXrunner
-	GROUP BY order_id
+3. Is there any relationship between the number of pizzas and how long the order takes to prepare?
+```
+  SELECT order_id, COUNT(pizza_id) AS no_of_pizza, AVG(DATEDIFF(minute, order_time, pickup_time)) AS [AVG_time_to_pickup_order]
+  FROM #temp_orderXrunner
+  GROUP BY order_id
+```
+  -- assumed that preparation time = pick up time to the HQ
+  -- the greater the number of pizzas in one order, the longer the preparation time takes
 
-	-- assumed that preparation time = pick up time to the HQ
-	-- the greater the number of pizzas in one order, the longer the preparation time takes
+4. What was the average distance travelled for each customer?
+```
+  SELECT customer_id, AVG(CAST(distance AS NUMERIC)) AS [AVG_Distance]
+  FROM #temp_orderXrunner
+  GROUP BY customer_id
+```
 
---What was the average distance travelled for each customer?
-	SELECT customer_id, AVG(CAST(distance AS NUMERIC)) AS [AVG_Distance]
-	FROM #temp_orderXrunner
-	GROUP BY customer_id
+5. What was the difference between the longest and shortest delivery times for all orders?
+```
+  SELECT MAX(duration) - MIN(duration) AS time_diff
+  FROM #temp_orderXrunner
+```
 
---What was the difference between the longest and shortest delivery times for all orders?
-	SELECT MAX(duration) - MIN(duration) AS time_diff
-	FROM #temp_orderXrunner
+6. What was the average speed for each runner for each delivery and do you notice any trend for these values?
+```
+  SELECT runner_id, order_id, distance, duration, AVG((distance / (duration/60))) AS [avg_speed (km/h)]
+  FROM #temp_orderXrunner
+  GROUP BY runner_id, order_id, distance, duration
+  ORDER BY runner_id, distance
+```
+Runners tend to use higher speed in short distance delivery, leading to shorter delivery time.
 
---What was the average speed for each runner for each delivery and do you notice any trend for these values?
-	SELECT runner_id, order_id, distance, duration, AVG((distance / (duration/60))) AS [avg_speed (km/h)]
-	FROM #temp_orderXrunner
-	GROUP BY runner_id, order_id, distance, duration
-	ORDER BY runner_id, distance
+7. What is the successful delivery percentage for each runner?
+```
+  SELECT tro.runner_id, (CAST(COUNT(duration) AS decimal(3,2)) / CAST(COUNT(tco.order_id) AS decimal(3,2)) *100) AS [delivery_perc]
+  FROM #temp_customer_order tco
+  JOIN #temp_runner_order tro
+    ON tco.order_id = tro.order_id
+  GROUP BY tro.runner_id
+```
+COUNT of duration (delivered order) and order_id needs to be converted first so that the division can comes out in decimal
 
-	--runners tend to use higher speed in short distance delivery, leading to shorter delivery time
-
---What is the successful delivery percentage for each runner?
-	SELECT tro.runner_id, (CAST(COUNT(duration) AS decimal(3,2)) / CAST(COUNT(tco.order_id) AS decimal(3,2)) *100) AS [delivery_perc]
-	FROM #temp_customer_order tco
-	JOIN #temp_runner_order tro
-		ON tco.order_id = tro.order_id
-		GROUP BY tro.runner_id
-
-	--COUNT of duration (delivered order) and order_id needs to be converted first so that the division can comes out in decimal
-
---join all of the information together to form a table which has the following information for successful deliveries?
---customer_id, order_id, runner_id, order_time, pickup_time, time between order and pickup, delivery duration, average speed, total number of pizzas
+EXTRAS
+join all of the information together to form a table which has the following information for successful deliveries?
+customer_id, order_id, runner_id, order_time, pickup_time, time between order and pickup, delivery duration, average speed, total number of pizzas
+```
 	CREATE VIEW [Success Delivery] AS
 	SELECT co.customer_id, co.order_id, ro.runner_id, co.order_time, ro.pickup_time, 
 			DATEDIFF(minute, order_time, pickup_time) AS [order-pickup],
@@ -363,6 +386,7 @@ A. Pizza (Metrics)
 	GROUP BY co.customer_id, co.order_id, ro.runner_id, co.order_time, ro.pickup_time, ro.duration
 
 	SELECT * FROM [Success Delivery]
+```
 	
 
 
