@@ -368,6 +368,7 @@ Runners tend to use higher speed in short distance delivery, leading to shorter 
 COUNT of duration (delivered order) and order_id needs to be converted first so that the division can comes out in decimal
 
 EXTRAS
+
 join all of the information together to form a table which has the following information for successful deliveries?
 customer_id, order_id, runner_id, order_time, pickup_time, time between order and pickup, delivery duration, average speed, total number of pizzas
 ```
