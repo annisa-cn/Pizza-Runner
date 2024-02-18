@@ -188,78 +188,88 @@ Cleaning dataset runner_order
 ```
 
 QUESTIONS:
+A. Pizza (Metrics)
+1. How many pizzas were ordered?
+```
+  SELECT COUNT(order_id) AS OrderedNumber
+  FROM #temp_customer_order
+```
 
---How many pizzas were ordered?
-	SELECT COUNT(order_id) AS OrderedNumber
-	FROM #temp_customer_order
+2. How many unique customer orders were made?
+```
+  SELECT COUNT (DISTINCT order_id) AS CustOrder
+  FROM #temp_customer_order
+```
 
---How many unique customer orders were made?
-	SELECT COUNT (DISTINCT order_id) AS CustOrder
-	FROM #temp_customer_order
+3. How many successful orders were delivered by each runner?
+```
+  SELECT runner_id, COUNT(order_id) AS order_count
+  FROM #temp_runner_order
+  WHERE duration IS NOT NULL
+  GROUP BY runner_id
+```
 
---How many successful orders were delivered by each runner?
-	SELECT runner_id, COUNT(order_id) AS order_count
-	FROM #temp_runner_order
-	WHERE duration IS NOT NULL
-	GROUP BY runner_id
+4. How many of each type of pizza was delivered?
+```	
+  ALTER TABLE pizza_names
+  ALTER COLUMN pizza_name VARCHAR(50)
 
---How many of each type of pizza was delivered?
-	
-	ALTER TABLE pizza_names
-	ALTER COLUMN pizza_name VARCHAR(50)
+  SELECT pn.pizza_name, COUNT(tco.customer_id) AS Qty
+  FROM #temp_customer_order tco
+  JOIN pizza_names pn
+    ON tco.pizza_id = pn.pizza_id
+  JOIN #temp_runner_order tro
+    ON tco.order_id = tro.order_id
+  WHERE NOT tro.duration = 'null'
+  GROUP BY pizza_name
+```
 
-	SELECT pn.pizza_name, COUNT(tco.customer_id) AS Qty
-	FROM #temp_customer_order tco
-	INNER JOIN pizza_names pn
-	ON tco.pizza_id = pn.pizza_id
-	INNER JOIN #temp_runner_order tro
-	ON tco.order_id = tro.order_id
-	WHERE NOT tro.duration = 'null'
-	GROUP BY pizza_name
+5. How many Vegetarian and Meatlovers were ordered by each customer?
+```
+  SELECT tco.customer_id, pn.pizza_name, COUNT(tco.customer_id) AS no_of_pizza
+  FROM #temp_customer_order tco
+  JOIN pizza_names pn
+    ON tco.pizza_id = pn.pizza_id
+  GROUP BY tco.customer_id, pn.pizza_name
+  ORDER BY tco.customer_id
+```
 
---How many Vegetarian and Meatlovers were ordered by each customer?
-	SELECT tco.customer_id, pn.pizza_name, COUNT(tco.customer_id) AS no_of_pizza
-	FROM #temp_customer_order tco
-	JOIN pizza_names pn
-		ON tco.pizza_id = pn.pizza_id
-	GROUP BY tco.customer_id, pn.pizza_name
-	ORDER BY tco.customer_id
+6. What was the maximum number of pizzas delivered in a single order?
+```
+  DROP TABLE IF EXISTS #temp_orderXrunner
+  SELECT co.order_id, co.customer_id, co.pizza_id, co.exclusions, co.extras, co.order_time
+	, ro.runner_id, ro.pickup_time, ro.distance, ro.duration, ro.cancellation
+  INTO #temp_orderXrunner
+  FROM #temp_customer_order co
+  JOIN #temp_runner_order ro
+    ON co.order_id = ro.order_id
+  WHERE duration IS NOT NULL
 
---What was the maximum number of pizzas delivered in a single order?
-	DROP TABLE IF EXISTS #temp_orderXrunner
-	SELECT co.order_id, co.customer_id, co.pizza_id, co.exclusions, co.extras, co.order_time
-		, ro.runner_id, ro.pickup_time, ro.distance, ro.duration, ro.cancellation
-	INTO #temp_orderXrunner
-	FROM #temp_customer_order co
-	JOIN #temp_runner_order ro
-		ON co.order_id = ro.order_id
-	WHERE duration IS NOT NULL
+  removing counters from distance & duration column
+  UPDATE #temp_orderXrunner
+  SET distance = REPLACE(distance, 'km', '')
+  WHERE distance LIKE '%km'
 
-	--removing counters from distance & duration column
-	UPDATE #temp_orderXrunner
-	SET distance = REPLACE(distance, 'km', '')
-	WHERE distance LIKE '%km'
+  UPDATE #temp_orderXrunner
+  SET distance = TRIM(distance)
 
-	UPDATE #temp_orderXrunner
-	SET distance = TRIM(distance)
+  UPDATE #temp_orderXrunner
+  SET duration = LEFT(duration, 2)
+  WHERE duration LIKE '%min%'
 
-	UPDATE #temp_orderXrunner
-	SET duration = LEFT(duration, 2)
-	WHERE duration LIKE '%min%'
+  changing datatype for column distance & duration in #temp_orderXrunner
 
-	--chaning datatype for column distance & duration in #temp_orderXrunner
-	ALTER TABLE #temp_orderXrunner
-	ALTER COLUMN distance NUMERIC
+  ALTER TABLE #temp_orderXrunner
+  ALTER COLUMN distance NUMERIC
 
-	ALTER TABLE #temp_orderXrunner
-	ALTER COLUMN duration NUMERIC
+  ALTER TABLE #temp_orderXrunner
+  ALTER COLUMN duration NUMERIC
 
-	SELECT * FROM #temp_orderXrunner
-
-	SELECT TOP(1) order_id, COUNT(customer_id) AS no_of_pizza
-	FROM #temp_orderXrunner
-	GROUP BY order_id
-	ORDER BY no_of_pizza DESC
+  SELECT TOP(1) order_id, COUNT(customer_id) AS no_of_pizza
+  FROM #temp_orderXrunner
+  GROUP BY order_id
+  ORDER BY no_of_pizza DESC
+```
 
 --For each customer, how many delivered pizzas had at least 1 change and how many had no changes?
 	SELECT customer_id,  
