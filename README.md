@@ -375,18 +375,19 @@ EXTRAS
 
 join all of the information together to form a table which has the following information for successful deliveries?
 customer_id, order_id, runner_id, order_time, pickup_time, time between order and pickup, delivery duration, average speed, total number of pizzas
+
 ```
 CREATE VIEW [Success Delivery] AS
 SELECT co.customer_id, co.order_id, ro.runner_id, co.order_time, ro.pickup_time, 
-	DATEDIFF(minute, order_time, pickup_time) AS [order-pickup],
-	ro.duration, 
-	AVG (CAST(TRIM(REPLACE(distance, 'km', '')) AS numeric) / 
-	CAST(LEFT(ro.duration,2) AS numeric) / 60 ) 
-	AS [avg_speed],
-	COUNT(co.pizza_id) AS no_of_pizza
+  DATEDIFF(minute, order_time, pickup_time) AS [order-pickup],
+  ro.duration, 
+  AVG (CAST(TRIM(REPLACE(distance, 'km', '')) AS numeric) / 
+  CAST(LEFT(ro.duration,2) AS numeric) / 60 ) 
+  AS [avg_speed],
+  COUNT(co.pizza_id) AS no_of_pizza
 FROM customer_orders co
 JOIN runner_orders ro
-	ON co.order_id = ro.order_id
+  ON co.order_id = ro.order_id
 WHERE ro.duration <> 'null'
 GROUP BY co.customer_id, co.order_id, ro.runner_id, co.order_time, ro.pickup_time, ro.duration
 
