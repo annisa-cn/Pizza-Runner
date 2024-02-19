@@ -234,7 +234,8 @@ A. Pizza (Metrics)
   ORDER BY tco.customer_id
 ```
 
-6. What was the maximum number of pizzas delivered in a single order?
+In this point, we can see that we're going to use the same join table.
+Hence, Im going to make it as temporary table.
 ```
   DROP TABLE IF EXISTS #temp_orderXrunner
   SELECT co.order_id, co.customer_id, co.pizza_id, co.exclusions, co.extras, co.order_time
@@ -245,7 +246,7 @@ A. Pizza (Metrics)
     ON co.order_id = ro.order_id
   WHERE duration IS NOT NULL
 ```
-removing counters from distance & duration column
+removing counters from distance & duration column, so aggregation can runs.
 ```
   UPDATE #temp_orderXrunner
   SET distance = REPLACE(distance, 'km', '')
@@ -266,6 +267,8 @@ changing datatype for column distance & duration in #temp_orderXrunner
   ALTER TABLE #temp_orderXrunner
   ALTER COLUMN duration NUMERIC
 
+6. What was the maximum number of pizzas delivered in a single order?
+```
   SELECT TOP(1) order_id, COUNT(customer_id) AS no_of_pizza
   FROM #temp_orderXrunner
   GROUP BY order_id
@@ -308,8 +311,9 @@ changing datatype for column distance & duration in #temp_orderXrunner
   GROUP BY DATENAME(weekday, order_time)
 ```
 
-  --DATEPART(interval, date) returns a specified part of a date as an integer value
-  --DATENAME(interval, date) returns a specified part of a date as a string value
+NOTE:
+DATEPART(interval, date) returns a specified part of a date as an integer value
+DATENAME(interval, date) returns a specified part of a date as a string value
 
 B. Pizza (Runner and Customer Experience)
 1. How many runners signed up for each 1 week period? (i.e. week starts 2021-01-01)
@@ -332,8 +336,8 @@ B. Pizza (Runner and Customer Experience)
   FROM #temp_orderXrunner
   GROUP BY order_id
 ```
-  -- assumed that preparation time = pick up time to the HQ
-  -- the greater the number of pizzas in one order, the longer the preparation time takes
+assumed that preparation time = pick up time to the HQ.
+From the result, it's shown that the greater the number of pizzas in one order, the longer the preparation time takes
 
 4. What was the average distance travelled for each customer?
 ```
@@ -372,21 +376,21 @@ EXTRAS
 join all of the information together to form a table which has the following information for successful deliveries?
 customer_id, order_id, runner_id, order_time, pickup_time, time between order and pickup, delivery duration, average speed, total number of pizzas
 ```
-	CREATE VIEW [Success Delivery] AS
-	SELECT co.customer_id, co.order_id, ro.runner_id, co.order_time, ro.pickup_time, 
-			DATEDIFF(minute, order_time, pickup_time) AS [order-pickup],
-			ro.duration, 
-			AVG (CAST(TRIM(REPLACE(distance, 'km', '')) AS numeric) / 
-				CAST(LEFT(ro.duration,2) AS numeric) / 60 ) 
-			AS [avg_speed],
-			COUNT(co.pizza_id) AS no_of_pizza
-	FROM customer_orders co
-	JOIN runner_orders ro
-		ON co.order_id = ro.order_id
-	WHERE ro.duration <> 'null'
-	GROUP BY co.customer_id, co.order_id, ro.runner_id, co.order_time, ro.pickup_time, ro.duration
+CREATE VIEW [Success Delivery] AS
+SELECT co.customer_id, co.order_id, ro.runner_id, co.order_time, ro.pickup_time, 
+	DATEDIFF(minute, order_time, pickup_time) AS [order-pickup],
+	ro.duration, 
+	AVG (CAST(TRIM(REPLACE(distance, 'km', '')) AS numeric) / 
+	CAST(LEFT(ro.duration,2) AS numeric) / 60 ) 
+	AS [avg_speed],
+	COUNT(co.pizza_id) AS no_of_pizza
+FROM customer_orders co
+JOIN runner_orders ro
+	ON co.order_id = ro.order_id
+WHERE ro.duration <> 'null'
+GROUP BY co.customer_id, co.order_id, ro.runner_id, co.order_time, ro.pickup_time, ro.duration
 
-	SELECT * FROM [Success Delivery]
+SELECT * FROM [Success Delivery]
 ```
 	
 
