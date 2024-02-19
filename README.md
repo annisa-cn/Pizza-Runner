@@ -234,8 +234,9 @@ A. Pizza (Metrics)
   ORDER BY tco.customer_id
 ```
 
-In this point, we can see that we're going to use the same join table.
+In this point, we're going to use the same join table.
 Hence, Im going to make it as temporary table.
+
 ```
   DROP TABLE IF EXISTS #temp_orderXrunner
   SELECT co.order_id, co.customer_id, co.pizza_id, co.exclusions, co.extras, co.order_time
@@ -266,6 +267,7 @@ changing datatype for column distance & duration in #temp_orderXrunner
 
   ALTER TABLE #temp_orderXrunner
   ALTER COLUMN duration NUMERIC
+```
 
 6. What was the maximum number of pizzas delivered in a single order?
 ```
