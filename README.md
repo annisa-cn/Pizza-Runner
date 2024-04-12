@@ -1,7 +1,7 @@
 # Pizza-Runner
 a dataset about pizza runners and its customer purchased
 
-making database to store the information
+we're going to start by creating database to store the information
 ```
 CREATE DATABASE [Pizza Runner]
 USE [Pizza Runner]
